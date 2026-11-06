@@ -7,3 +7,4 @@ raw/globe_q7_api.json
 raw/enroll2025.txt
 # duplicate of the unzipped shapefile
 raw/census/*.zip
+_work/
