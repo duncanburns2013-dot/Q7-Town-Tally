@@ -21,6 +21,8 @@
 <title>Question 7 by Town</title>
 <link rel="preconnect" href="https://use.typekit.net" crossorigin>
 <link rel="stylesheet" href="https://use.typekit.net/irk1bar.css">
+<!-- Fallbacks for hosts that block the Adobe kit (e.g. the Claude artifact viewer). -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Inter+Tight:wght@400;600;700&display=swap">
 <style>
 /* Layout: Massachusetts Data Hub results sheet (tokens read from the live
    assets/hub-theme.css, 2026-11-06): slate ground, white square cards under a
@@ -47,8 +49,8 @@
   --hatch: #c3cbc8;
   --chip: #eef0ef;
   --focus: #14558f;
-  --font-display: "halyard-display", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-body: "halyard-text", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "halyard-display", "Inter Tight", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body: "halyard-text", "Inter Tight", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-data: "ibm-plex-mono", "IBM Plex Mono", ui-monospace, "SF Mono", Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) {

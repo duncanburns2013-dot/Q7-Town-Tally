@@ -58,6 +58,8 @@ and they are not evidence that party enrollment caused the result.
 | `index.html` | The published map (the GitHub Pages copy) |
 | `site/template.html` | Page source; the build injects the data into it |
 | `site/q7-town-map.html` | The same page without the document skeleton, for the Claude artifact host |
+| `site/og-template.html` → `og.html` → `og.png` | The 1200×630 social preview card, painted from the same data and color ramp |
+| `scripts/render_og.ps1` | Renders `og.html` to `og.png` with headless Chrome |
 | `enrollment_by_town_20250201.csv` | Town enrollment parsed from the PDF |
 | `q7_by_town_with_enrollment.csv` | Question 7 results joined to enrollment |
 | `scripts/parse_enrollment.py` | PDF → enrollment CSV |
@@ -79,4 +81,17 @@ python -m venv .venv
 .venv/Scripts/python scripts/build_map_data.py
 ```
 
-On macOS or Linux, use `.venv/bin/python`.
+On macOS or Linux, use `.venv/bin/python`. Then refresh the social card (Windows,
+needs Chrome and a network connection for the fonts):
+
+```powershell
+powershell -File scripts/render_og.ps1
+```
+
+## Design
+
+The page follows the Massachusetts Data Hub theme: the official state colors (Bay
+Blue, Berkshire Green, Cranberry) on a slate ground, with Halyard and IBM Plex
+Mono. Yes/No runs from Cranberry (No) to Berkshire Green (Yes) rather than blue
+and red, so the vote never reads as Democrat versus Republican next to the
+party-enrollment maps. Both arms of that scale step through matching lightness.
