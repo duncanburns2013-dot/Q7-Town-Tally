@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+# Boston Globe page copy and API response: their content, not ours to republish
+raw/globe_q7.html
+raw/globe_q7_api.json
+# pdftotext scratch output; superseded by the pymupdf parser
+raw/enroll2025.txt
+# duplicate of the unzipped shapefile
+raw/census/*.zip

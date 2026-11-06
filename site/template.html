@@ -1,0 +1,643 @@
+<title>Question 7 by Town</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: warm-paper civic results sheet. Masthead + headline numbers, then the map
+   as the dominant object with a pinned town card beside it; scatter and the full
+   351-town ledger below. Party share uses the Data Hub navy/crimson/amber; the
+   Yes/No question itself uses a purple<->orange diverging scale so it never reads
+   as Democrat/Republican. */
+:root {
+  --bg: #f8f7f4;
+  --card: #ffffff;
+  --line: #e8e5df;
+  --line-strong: #d6d1c8;
+  --ink: #1a1a1a;
+  --ink-2: #3d3a36;
+  --muted: #6b665e;
+  --navy: #1f5499;
+  --crimson: #c0392b;
+  --amber: #b8860b;
+  --gray-party: #8a857c;
+  --yes: #542788;
+  --no: #b35806;
+  --town-stroke: #fbfaf7;
+  --hover-stroke: #1a1a1a;
+  --hatch: #c9c3b8;
+  --chip: #efece6;
+  --focus: #1f5499;
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SF Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #171614; --card: #1f1d1a; --line: #33302b; --line-strong: #45413a;
+    --ink: #eeebe5; --ink-2: #d2cdc4; --muted: #a49e94;
+    --navy: #7ea6e3; --crimson: #e57b6c; --amber: #d9a93a; --gray-party: #9a958b;
+    --yes: #b9a6e0; --no: #f0a35a;
+    --town-stroke: #171614; --hover-stroke: #ffffff; --hatch: #4a463f; --chip: #2a2824;
+    --focus: #7ea6e3; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #171614; --card: #1f1d1a; --line: #33302b; --line-strong: #45413a;
+  --ink: #eeebe5; --ink-2: #d2cdc4; --muted: #a49e94;
+  --navy: #7ea6e3; --crimson: #e57b6c; --amber: #d9a93a; --gray-party: #9a958b;
+  --yes: #b9a6e0; --no: #f0a35a;
+  --town-stroke: #171614; --hover-stroke: #ffffff; --hatch: #4a463f; --chip: #2a2824;
+  --focus: #7ea6e3; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 56px;
+}
+.wrap { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+.num, td.n, .mono { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+
+/* Masthead */
+.mast { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px 40px; align-items: end;
+  border-bottom: 2px solid var(--ink); padding-bottom: 20px; }
+.eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600;
+  display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.eyebrow .flag { color: var(--no); }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(34px, 5.4vw, 60px); line-height: 1.02;
+  letter-spacing: -.015em; margin: 10px 0 12px; text-wrap: balance; }
+.dek { max-width: 64ch; color: var(--ink-2); font-size: 16.5px; margin: 0; text-wrap: pretty; }
+.result { display: grid; grid-template-columns: auto auto; gap: 4px 22px; align-items: baseline; min-width: 0; }
+.result .side { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; }
+.result .side.no { color: var(--no); } .result .side.yes { color: var(--yes); }
+.result .pct { font-family: var(--font-display); font-size: clamp(30px, 4vw, 44px); font-weight: 700; line-height: 1; }
+.result .votes { grid-column: 1 / -1; font-size: 13px; color: var(--muted); }
+.splitbar { grid-column: 1 / -1; display: flex; gap: 2px; height: 10px; margin-top: 6px; min-width: 240px; }
+.splitbar span { display: block; height: 100%; }
+.splitbar .no { background: var(--no); border-radius: 4px 0 0 4px; }
+.splitbar .yes { background: var(--yes); border-radius: 0 4px 4px 0; }
+.townscore { grid-column: 1 / -1; font-size: 13px; color: var(--ink-2); }
+
+/* Controls */
+.controls { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line-strong); border-radius: 8px; overflow: hidden; background: var(--card); }
+.seg button { font: inherit; font-size: 13.5px; font-weight: 600; border: 0; background: transparent; color: var(--ink-2);
+  padding: 8px 14px; cursor: pointer; border-right: 1px solid var(--line); }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.seg button:hover:not([aria-pressed="true"]) { background: var(--chip); }
+.ctl-label { font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 700; }
+.ctl { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+input[type="search"] { font: inherit; font-size: 14px; padding: 8px 12px; border: 1px solid var(--line-strong); border-radius: 8px;
+  background: var(--card); color: var(--ink); width: 220px; max-width: 100%; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* Map + town card */
+.stage { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 24px; align-items: start; }
+.mapbox { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 14px 10px; min-width: 0; position: relative; }
+.maphead { display: flex; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; align-items: center; margin-bottom: 6px; }
+.zoom { display: flex; flex-wrap: wrap; gap: 6px; }
+.zoom button { font: inherit; font-size: 12.5px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line-strong);
+  background: transparent; color: var(--ink-2); cursor: pointer; }
+.zoom button[aria-pressed="true"] { border-color: var(--ink); color: var(--ink); font-weight: 600; background: var(--chip); }
+#map { width: 100%; height: auto; display: block; touch-action: manipulation; }
+#map path.t { stroke: var(--town-stroke); stroke-width: .5; vector-effect: non-scaling-stroke; cursor: pointer; transition: fill .35s ease; }
+#map path.t.hl { stroke: var(--hover-stroke); stroke-width: 2; }
+#map path.t.dim { opacity: .25; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; margin-top: 8px; font-size: 12.5px; color: var(--muted); }
+.legend .bar { height: 10px; width: min(360px, 100%); border-radius: 3px; }
+.legend .ticks { display: flex; justify-content: space-between; width: min(360px, 100%); font-family: var(--font-data); font-size: 11.5px; color: var(--muted); margin-top: 3px; }
+.legend .scale { display: flex; flex-direction: column; min-width: 0; flex: 0 1 360px; }
+.legend .ends { display: flex; justify-content: space-between; width: min(360px, 100%); font-size: 12px; font-weight: 600; margin-bottom: 3px; }
+.sw-hatch { display: inline-block; width: 14px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 5px;
+  background: repeating-linear-gradient(45deg, var(--hatch) 0 2px, transparent 2px 5px); border: 1px solid var(--hatch); }
+
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.card .cty { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+.card h2 { font-family: var(--font-display); font-size: 30px; line-height: 1.05; margin: 2px 0 0; font-weight: 700; text-wrap: balance; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; padding: 3px 10px; border-radius: 999px;
+  border: 1.5px solid currentColor; width: fit-content; }
+.pill.yes { color: var(--yes); } .pill.no { color: var(--no); } .pill.na { color: var(--muted); }
+.kv { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; font-size: 13.5px; }
+.kv dt { color: var(--muted); } .kv dd { margin: 0; text-align: right; font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+.sub { font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 700; margin: 0 0 6px; }
+.stack { display: flex; gap: 2px; height: 14px; }
+.stack span { height: 100%; display: block; }
+.stack span:first-child { border-radius: 4px 0 0 4px; } .stack span:last-child { border-radius: 0 4px 4px 0; }
+.keyrow { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12.5px; color: var(--ink-2); margin-top: 6px; }
+.keyrow i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; vertical-align: 0; }
+.note { font-size: 12.5px; color: var(--muted); margin: 0; }
+.warn { color: var(--no); font-weight: 600; }
+
+/* Scatter */
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.panel h3 { font-family: var(--font-display); font-size: 24px; margin: 0; font-weight: 700; text-wrap: balance; }
+.panel .lede { margin: 0; color: var(--ink-2); max-width: 70ch; }
+.panelhead { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 20px; align-items: end; }
+#scatter { width: 100%; height: auto; display: block; overflow: visible; }
+#scatter .grid line { stroke: var(--line); stroke-width: 1; }
+#scatter .axis text { fill: var(--muted); font-family: var(--font-data); font-size: 11px; }
+#scatter .axis .lbl { fill: var(--ink-2); font-family: var(--font-body); font-size: 12px; font-weight: 600; }
+#scatter circle.dot { stroke: var(--card); stroke-width: 1.5; cursor: pointer; }
+#scatter circle.dot.hl { stroke: var(--hover-stroke); stroke-width: 2.5; }
+#scatter .ref { stroke: var(--ink-2); stroke-dasharray: 4 4; stroke-width: 1; }
+#scatter .reflbl { fill: var(--ink-2); font-size: 11.5px; font-family: var(--font-body); font-weight: 600; }
+#scatter .dlbl { fill: var(--ink-2); font-size: 11.5px; font-family: var(--font-body); font-weight: 600; pointer-events: none;
+  paint-order: stroke; stroke: var(--card); stroke-width: 3px; }
+.rstat { font-family: var(--font-data); font-size: 13px; color: var(--ink-2); }
+
+/* Table */
+.tablewrap { overflow: auto; max-height: 560px; border: 1px solid var(--line); border-radius: 8px; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; min-width: 820px; }
+thead th { position: sticky; top: 0; background: var(--card); z-index: 1; text-align: left; font-size: 12px; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--muted); font-weight: 700; padding: 10px 10px; border-bottom: 1.5px solid var(--line-strong); white-space: nowrap; }
+thead th button { all: unset; cursor: pointer; display: inline-flex; gap: 4px; align-items: center; }
+thead th button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+thead th.n, td.n { text-align: right; }
+thead th.n button { justify-content: flex-end; }
+tbody td { padding: 7px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+tbody tr { cursor: pointer; }
+tbody tr:hover, tbody tr.sel { background: var(--chip); }
+.res { font-weight: 700; font-size: 12px; letter-spacing: .04em; }
+.res.yes { color: var(--yes); } .res.no { color: var(--no); } .res.na { color: var(--muted); }
+.mini { display: inline-block; width: 46px; height: 6px; border-radius: 3px; vertical-align: 1px; margin-left: 8px; position: relative; background: var(--chip); }
+.mini b { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; }
+
+/* Tooltip */
+.tip { position: fixed; z-index: 20; pointer-events: none; background: var(--card); color: var(--ink); border: 1px solid var(--line-strong);
+  border-radius: 8px; padding: 10px 12px; font-size: 12.5px; box-shadow: 0 6px 22px rgba(0,0,0,.14); min-width: 190px; max-width: 260px; }
+.tip strong { font-family: var(--font-display); font-size: 16px; display: block; margin-bottom: 2px; }
+.tip .row { display: flex; justify-content: space-between; gap: 14px; }
+.tip .row span:last-child { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+
+.sources { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px 28px; font-size: 13px; color: var(--ink-2);
+  border-top: 1px solid var(--line-strong); padding-top: 18px; }
+.sources h4 { margin: 0 0 4px; font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+.sources p { margin: 0; }
+.sources a { color: var(--navy); }
+
+@media (max-width: 900px) {
+  .stage { grid-template-columns: minmax(0, 1fr); }
+  .mast { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 520px) {
+  .seg button { padding: 7px 10px; font-size: 12.5px; }
+  .card h2 { font-size: 26px; }
+  .splitbar { min-width: 0; }
+}
+@media (prefers-reduced-motion: reduce) { #map path.t { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <div>
+      <div class="eyebrow"><span>Massachusetts State Election &middot; Nov. 3, 2026</span><span class="flag" id="statusFlag">Unofficial results</span></div>
+      <h1>Question 7, town by town</h1>
+      <p class="dek" id="dek">Question 7 would have required cities and towns to allow single-family homes on lots of 5,000 square feet or more. It lost narrowly statewide. The map shows how each of the 351 cities and towns voted, beside how its voters are registered.</p>
+    </div>
+    <div class="result" id="result" aria-label="Statewide result"></div>
+  </header>
+
+  <section class="controls" aria-label="Map controls">
+    <div class="ctl">
+      <span class="ctl-label" id="modeLbl">Color towns by</span>
+      <div class="seg" role="group" aria-labelledby="modeLbl" id="modes">
+        <button type="button" data-mode="q7" aria-pressed="true">Question 7 vote</button>
+        <button type="button" data-mode="d" aria-pressed="false">% Democrat</button>
+        <button type="button" data-mode="r" aria-pressed="false">% Republican</button>
+        <button type="button" data-mode="u" aria-pressed="false">% Unenrolled</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <label class="ctl-label" for="find">Find a town</label>
+      <input type="search" id="find" list="townlist" placeholder="e.g. Newburyport" autocomplete="off">
+      <datalist id="townlist"></datalist>
+    </div>
+  </section>
+
+  <section class="stage">
+    <div class="mapbox">
+      <div class="maphead">
+        <div class="zoom" role="group" aria-label="Zoom to region" id="zoom"></div>
+        <span class="note">Hover a town for numbers, click to pin it.</span>
+      </div>
+      <svg id="map" role="img" aria-label="Map of Massachusetts cities and towns colored by the selected measure">
+        <defs>
+          <pattern id="nores" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <rect width="5" height="5" fill="var(--card)"></rect>
+            <line x1="0" y1="0" x2="0" y2="5" stroke="var(--hatch)" stroke-width="2.4"></line>
+          </pattern>
+        </defs>
+        <g id="towns"></g>
+      </svg>
+      <div class="legend" id="legend"></div>
+    </div>
+    <aside class="card" id="card" aria-live="polite"></aside>
+  </section>
+
+  <section class="panel" aria-labelledby="scTitle">
+    <div class="panelhead">
+      <div>
+        <h3 id="scTitle">Yes share against party registration</h3>
+        <p class="lede">Each dot is one city or town, sized by Yes + No votes cast. Towns with more registered Democrats leaned Yes; towns with more Republicans or unenrolled voters leaned No. This is a town-level pattern and says nothing about how any individual voted.</p>
+      </div>
+      <div class="ctl">
+        <span class="ctl-label" id="xLbl">Across</span>
+        <div class="seg" role="group" aria-labelledby="xLbl" id="xmodes">
+          <button type="button" data-x="d" aria-pressed="true">% Democrat</button>
+          <button type="button" data-x="r" aria-pressed="false">% Republican</button>
+          <button type="button" data-x="u" aria-pressed="false">% Unenrolled</button>
+        </div>
+      </div>
+    </div>
+    <svg id="scatter" viewBox="0 0 960 440" role="img" aria-label="Scatter plot of Question 7 Yes share against party registration share by town"></svg>
+    <div class="rstat" id="rstat"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="tbTitle">
+    <div class="panelhead">
+      <h3 id="tbTitle">All 351 cities and towns</h3>
+      <span class="note" id="tbCount"></span>
+    </div>
+    <div class="tablewrap">
+      <table id="tbl">
+        <thead><tr>
+          <th><button type="button" data-k="n">Town</button></th>
+          <th><button type="button" data-k="c">County</button></th>
+          <th><button type="button" data-k="res">Result</button></th>
+          <th class="n"><button type="button" data-k="yp">Yes %</button></th>
+          <th class="n"><button type="button" data-k="y">Yes</button></th>
+          <th class="n"><button type="button" data-k="no">No</button></th>
+          <th class="n"><button type="button" data-k="dp">Dem %</button></th>
+          <th class="n"><button type="button" data-k="rp">Rep %</button></th>
+          <th class="n"><button type="button" data-k="up">Unenr. %</button></th>
+          <th class="n"><button type="button" data-k="reg">Registered</button></th>
+          <th class="n"><button type="button" data-k="prc">Precincts</button></th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="sources">
+    <div>
+      <h4>Question 7 results</h4>
+      <p>Associated Press unofficial returns as published on the <a href="https://www.bostonglobe.com/elections/2026/massachusetts/question/7%20-%20reduce%20minimum%20lot%20sizes%20for%20single-family%20homes/" target="_blank" rel="noopener">Boston Globe results page</a>, captured Nov. 6, 2026, 1:37 p.m. ET with 98.99% of votes counted. Town totals sum exactly to the AP statewide count. Blank ballots are not included. Certified results from the Secretary of the Commonwealth will replace these.</p>
+    </div>
+    <div>
+      <h4>Party registration</h4>
+      <p>Secretary of the Commonwealth, <a href="https://www.sec.state.ma.us/divisions/elections/download/research-and-statistics/enrollment_count_20250201.pdf" target="_blank" rel="noopener">Registered Voters and Party Enrollment as of Feb. 1, 2025</a>, the newest edition posted. &ldquo;Other&rdquo; is every other party and designation (registered minus D, R and unenrolled). Town figures sum exactly to the state totals.</p>
+    </div>
+    <div>
+      <h4>Boundaries &amp; caveats</h4>
+      <p>U.S. Census Bureau 2023 cartographic boundaries (county subdivisions, 1:500k), simplified. Registration is 21 months older than the vote, so treat it as each town's lean, not its Nov. 2026 rolls. Ten towns still had precincts outstanding at capture; two had reported nothing.</p>
+    </div>
+  </footer>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<script>
+const DATA = /*__DATA__*/null;
+const T = DATA.towns;
+const fmt = new Intl.NumberFormat('en-US');
+const pct = (v, d = 1) => v == null ? '—' : v.toFixed(d) + '%';
+
+T.forEach((t, i) => {
+  t.i = i;
+  t.tot = t.y + t.no;
+  t.yp = t.tot ? 100 * t.y / t.tot : null;
+  t.dp = 100 * t.d / t.reg; t.rp = 100 * t.r / t.reg; t.up = 100 * t.u / t.reg; t.op = 100 * t.o / t.reg;
+  t.res = t.tot === 0 ? 'na' : t.y > t.no ? 'yes' : t.no > t.y ? 'no' : 'tie';
+  t.prc = t.pt ? t.pr / t.pt : 0;
+});
+
+/* ---------- color ---------- */
+const hex2rgb = h => [1, 3, 5].map(o => parseInt(h.slice(o, o + 2), 16));
+const rgb2hex = c => '#' + c.map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
+function ramp(stops, t) {
+  t = Math.max(0, Math.min(1, t));
+  const s = t * (stops.length - 1), i = Math.min(stops.length - 2, Math.floor(s)), f = s - i;
+  const a = hex2rgb(stops[i]), b = hex2rgb(stops[i + 1]);
+  return rgb2hex(a.map((v, k) => v + (b[k] - v) * f));
+}
+// orange (No) -> neutral -> purple (Yes); ColorBrewer PuOr with a neutral paper midpoint
+const DIV = ['#7f3b08', '#b35806', '#e08214', '#fdb863', '#fee0b6', '#eeece8', '#d8daeb', '#b2abd2', '#8073ac', '#542788', '#2d004b'];
+const SEQ = {
+  d: ['#eef2f8', '#9db6dc', '#3f6db0', '#1f5499', '#0f2942'],
+  r: ['#fbeeec', '#eaa79d', '#d1584a', '#c0392b', '#6e1a12'],
+  u: ['#f7f2e3', '#e3cd8c', '#c99a26', '#b8860b', '#5c4305'],
+};
+const Q7_LO = 20, Q7_HI = 80;
+const q7Color = yp => yp == null ? 'url(#nores)' : ramp(DIV, (yp - Q7_LO) / (Q7_HI - Q7_LO));
+function niceExtent(vals, step) {
+  return [Math.floor(Math.min(...vals) / step) * step, Math.ceil(Math.max(...vals) / step) * step];
+}
+const EXT = { d: niceExtent(T.map(t => t.dp), 5), r: niceExtent(T.map(t => t.rp), 5), u: niceExtent(T.map(t => t.up), 5) };
+const KEY = { d: 'dp', r: 'rp', u: 'up' };
+const NAME = { d: 'Democrat', r: 'Republican', u: 'Unenrolled' };
+function fillFor(t, mode) {
+  if (mode === 'q7') return q7Color(t.yp);
+  const [lo, hi] = EXT[mode];
+  return ramp(SEQ[mode], (t[KEY[mode]] - lo) / (hi - lo));
+}
+
+/* ---------- statewide header (computed from the town rows) ---------- */
+const S = T.reduce((a, t) => (a.y += t.y, a.no += t.no, a), { y: 0, no: 0 });
+S.noTowns = T.filter(t => t.res === 'no').length;
+S.yesTowns = T.filter(t => t.res === 'yes').length;
+S.naTowns = T.filter(t => t.res === 'na').length;
+const STOT = S.y + S.no, SYP = 100 * S.y / STOT, SNP = 100 * S.no / STOT;
+document.getElementById('result').innerHTML = `
+  <span class="side no">No</span><span class="side yes">Yes</span>
+  <span class="pct num" style="color:var(--no)">${SNP.toFixed(1)}%</span><span class="pct num" style="color:var(--yes)">${SYP.toFixed(1)}%</span>
+  <div class="splitbar" aria-hidden="true"><span class="no" style="width:${SNP}%"></span><span class="yes" style="width:${SYP}%"></span></div>
+  <span class="votes num">${fmt.format(S.no)} No &middot; ${fmt.format(S.y)} Yes &middot; margin ${fmt.format(S.no - S.y)}</span>
+  <span class="townscore">${S.noTowns} towns voted No, ${S.yesTowns} voted Yes${S.naTowns ? `, ${S.naTowns} not yet reported` : ''}.</span>`;
+
+/* ---------- map ---------- */
+const svg = document.getElementById('map');
+const gTowns = document.getElementById('towns');
+const NS = 'http://www.w3.org/2000/svg';
+const FULL = [0, 0, DATA.w, DATA.h];
+svg.setAttribute('viewBox', FULL.join(' '));
+const paths = T.map(t => {
+  const p = document.createElementNS(NS, 'path');
+  p.setAttribute('d', t.p); p.setAttribute('class', 't'); p.dataset.i = t.i;
+  p.setAttribute('tabindex', '-1');
+  gTowns.appendChild(p);
+  return p;
+});
+let mode = 'q7', pinned = T.find(t => t.n === 'Newburyport') || T[0], hover = null;
+
+function paintMap() { T.forEach(t => paths[t.i].setAttribute('fill', fillFor(t, mode))); }
+
+function legend() {
+  const el = document.getElementById('legend');
+  if (mode === 'q7') {
+    const grad = `linear-gradient(90deg, ${DIV.join(',')})`;
+    el.innerHTML = `<div class="scale">
+        <div class="ends"><span style="color:var(--no)">&larr; No</span><span style="color:var(--yes)">Yes &rarr;</span></div>
+        <div class="bar" style="background:${grad}"></div>
+        <div class="ticks"><span>&le;20%</span><span>35%</span><span>50%</span><span>65%</span><span>&ge;80%</span></div>
+      </div><span>Yes share of Yes + No votes</span><span><i class="sw-hatch"></i>No results yet</span>`;
+  } else {
+    const [lo, hi] = EXT[mode];
+    const grad = `linear-gradient(90deg, ${SEQ[mode].join(',')})`;
+    const mid = (lo + hi) / 2;
+    el.innerHTML = `<div class="scale"><div class="bar" style="background:${grad}"></div>
+      <div class="ticks"><span>${lo}%</span><span>${mid % 1 ? mid.toFixed(1) : mid}%</span><span>${hi}%</span></div></div>
+      <span>${NAME[mode]} share of registered voters, Feb. 2025</span>`;
+  }
+}
+
+/* zoom presets: bounding box of anchor towns' shapes */
+function bboxOf(names) {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  names.forEach(n => {
+    const t = T.find(z => z.n === n); if (!t) return;
+    const b = paths[t.i].getBBox();
+    x0 = Math.min(x0, b.x); y0 = Math.min(y0, b.y); x1 = Math.max(x1, b.x + b.width); y1 = Math.max(y1, b.y + b.height);
+  });
+  const pad = 8, w = x1 - x0 + 2 * pad, h = y1 - y0 + 2 * pad;
+  // keep the map's aspect so towns don't stretch
+  const ar = DATA.w / DATA.h;
+  let W = w, H = h;
+  if (W / H > ar) H = W / ar; else W = H * ar;
+  return [x0 - pad - (W - w) / 2, y0 - pad - (H - h) / 2, W, H];
+}
+const ZOOMS = [
+  ['Statewide', null],
+  ['Greater Boston', ['Lynn', 'Quincy', 'Waltham', 'Woburn', 'Needham', 'Revere', 'Milton']],
+  ['North Shore & Merrimack', ['Lowell', 'Salisbury', 'Rockport', 'Lynn', 'Haverhill', 'Dracut']],
+  ['Worcester area', ['Worcester', 'Holden', 'Shrewsbury', 'Auburn', 'Leicester']],
+  ['Pioneer Valley', ['Springfield', 'Northampton', 'Amherst', 'Westfield', 'Greenfield', 'Palmer']],
+  ['Cape & Islands', ['Bourne', 'Provincetown', 'Chatham', 'Nantucket', 'Aquinnah', 'Falmouth']],
+];
+let vb = FULL.slice(), anim = null;
+function setView(target) {
+  const from = vb.slice(), t0 = performance.now(), dur = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 450;
+  cancelAnimationFrame(anim);
+  const step = now => {
+    const k = dur ? Math.min(1, (now - t0) / dur) : 1, e = 1 - Math.pow(1 - k, 3);
+    vb = from.map((v, i) => v + (target[i] - v) * e);
+    svg.setAttribute('viewBox', vb.join(' '));
+    if (k < 1) anim = requestAnimationFrame(step);
+  };
+  anim = requestAnimationFrame(step);
+}
+const zoomEl = document.getElementById('zoom');
+ZOOMS.forEach(([label, names], i) => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.textContent = label; b.setAttribute('aria-pressed', i === 0 ? 'true' : 'false');
+  b.addEventListener('click', () => {
+    zoomEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+    setView(names ? bboxOf(names) : FULL);
+  });
+  zoomEl.appendChild(b);
+});
+
+/* ---------- tooltip ---------- */
+const tip = document.getElementById('tip');
+function tipHTML(t) {
+  const resTxt = t.res === 'na' ? 'No results yet' : t.res === 'yes' ? `Yes by ${fmt.format(t.y - t.no)}` : t.res === 'no' ? `No by ${fmt.format(t.no - t.y)}` : 'Tied';
+  return `<strong>${t.n}</strong><div style="color:var(--muted);margin-bottom:6px">${t.c} County &middot; ${resTxt}</div>
+    <div class="row"><span>Yes share</span><span>${pct(t.yp)}</span></div>
+    <div class="row"><span>Yes / No</span><span>${fmt.format(t.y)} / ${fmt.format(t.no)}</span></div>
+    <div class="row"><span>Dem / Rep / Unenr.</span><span>${t.dp.toFixed(0)} / ${t.rp.toFixed(0)} / ${t.up.toFixed(0)}%</span></div>
+    ${t.pr < t.pt ? `<div class="row warn"><span>Precincts in</span><span>${t.pr} of ${t.pt}</span></div>` : ''}`;
+}
+function showTip(t, ev) {
+  tip.innerHTML = tipHTML(t); tip.hidden = false;
+  const r = tip.getBoundingClientRect();
+  let x = ev.clientX + 16, y = ev.clientY + 16;
+  if (x + r.width > innerWidth - 8) x = ev.clientX - r.width - 16;
+  if (y + r.height > innerHeight - 8) y = ev.clientY - r.height - 16;
+  tip.style.left = Math.max(8, x) + 'px'; tip.style.top = Math.max(8, y) + 'px';
+}
+function hideTip() { tip.hidden = true; }
+
+/* ---------- highlight (map + scatter + table share one state) ---------- */
+let dots = [];
+function setHover(t) {
+  if (hover === t) return;
+  if (hover && hover !== pinned) { paths[hover.i].classList.remove('hl'); dots[hover.i]?.classList.remove('hl'); }
+  hover = t;
+  if (t) { paths[t.i].classList.add('hl'); gTowns.appendChild(paths[t.i]); dots[t.i]?.classList.add('hl'); dots[t.i]?.parentNode.appendChild(dots[t.i]); }
+  if (pinned) { paths[pinned.i].classList.add('hl'); dots[pinned.i]?.classList.add('hl'); }
+}
+function pin(t, scroll) {
+  if (pinned) { paths[pinned.i].classList.remove('hl'); dots[pinned.i]?.classList.remove('hl'); }
+  pinned = t;
+  paths[t.i].classList.add('hl'); gTowns.appendChild(paths[t.i]);
+  if (dots[t.i]) { dots[t.i].classList.add('hl'); dots[t.i].parentNode.appendChild(dots[t.i]); }
+  renderCard(t);
+  document.querySelectorAll('#tbl tbody tr.sel').forEach(r => r.classList.remove('sel'));
+  const row = document.querySelector(`#tbl tbody tr[data-i="${t.i}"]`);
+  if (row) { row.classList.add('sel'); if (scroll) row.scrollIntoView({ block: 'nearest' }); }
+}
+
+gTowns.addEventListener('pointermove', ev => {
+  const p = ev.target.closest('path.t'); if (!p) return;
+  const t = T[+p.dataset.i]; setHover(t); showTip(t, ev);
+});
+gTowns.addEventListener('pointerleave', () => { setHover(null); hideTip(); });
+gTowns.addEventListener('click', ev => {
+  const p = ev.target.closest('path.t'); if (p) pin(T[+p.dataset.i], true);
+});
+
+/* ---------- town card ---------- */
+function renderCard(t) {
+  const el = document.getElementById('card');
+  const pillCls = t.res === 'yes' ? 'yes' : t.res === 'no' ? 'no' : 'na';
+  const pillTxt = t.res === 'na' ? 'No results yet' : t.res === 'tie' ? 'Tied'
+    : `Voted ${t.res === 'yes' ? 'Yes' : 'No'} by ${(Math.abs(t.yp - 50) * 2).toFixed(1)} pts`;
+  const ypw = t.yp ?? 0, npw = t.tot ? 100 - ypw : 0;
+  const parts = [['Democrat', t.dp, 'var(--navy)'], ['Republican', t.rp, 'var(--crimson)'], ['Unenrolled', t.up, 'var(--amber)'], ['Other', t.op, 'var(--gray-party)']];
+  el.innerHTML = `
+    <div><div class="cty">${t.c} County</div><h2>${t.n}</h2></div>
+    <span class="pill ${pillCls}">${pillTxt}</span>
+    <div>
+      <p class="sub">Question 7</p>
+      ${t.tot ? `<div class="stack" aria-hidden="true"><span style="width:${npw}%;background:var(--no)"></span><span style="width:${ypw}%;background:var(--yes)"></span></div>` : ''}
+      <dl class="kv" style="margin-top:8px">
+        <dt>No</dt><dd>${fmt.format(t.no)}${t.tot ? ` &middot; ${(100 - t.yp).toFixed(1)}%` : ''}</dd>
+        <dt>Yes</dt><dd>${fmt.format(t.y)}${t.tot ? ` &middot; ${t.yp.toFixed(1)}%` : ''}</dd>
+        <dt>Precincts reporting</dt><dd class="${t.pr < t.pt ? 'warn' : ''}">${t.pr} of ${t.pt}</dd>
+      </dl>
+    </div>
+    <div>
+      <p class="sub">Registered voters, Feb. 2025</p>
+      <div class="stack" aria-hidden="true">${parts.map(p => `<span style="width:${p[1]}%;background:${p[2]}"></span>`).join('')}</div>
+      <div class="keyrow">${parts.map(p => `<span><i style="background:${p[2]}"></i>${p[0]} ${p[1].toFixed(1)}%</span>`).join('')}</div>
+      <dl class="kv" style="margin-top:8px">
+        <dt>Registered</dt><dd>${fmt.format(t.reg)}</dd>
+        <dt>Democrat / Republican</dt><dd>${fmt.format(t.d)} / ${fmt.format(t.r)}</dd>
+        <dt>Unenrolled / Other</dt><dd>${fmt.format(t.u)} / ${fmt.format(t.o)}</dd>
+        <dt>Yes + No votes per registered</dt><dd>${(100 * t.tot / t.reg).toFixed(0)}%</dd>
+      </dl>
+    </div>
+    <p class="note">Yes + No excludes blank ballots, and registration predates the election by 21 months, so the last line is a rough participation gauge, not turnout.</p>`;
+}
+
+/* ---------- scatter ---------- */
+const sc = document.getElementById('scatter');
+const M = { l: 58, r: 18, t: 16, b: 50 }, SW = 960, SH = 440;
+let xmode = 'd';
+const LABEL_TOWNS = ['Boston', 'Cambridge', 'Somerville', 'Worcester', 'Springfield', 'Plymouth', 'Rehoboth', 'Newburyport'];
+function corr(xs, ys) {
+  const n = xs.length, mx = xs.reduce((a, b) => a + b) / n, my = ys.reduce((a, b) => a + b) / n;
+  let sxy = 0, sxx = 0, syy = 0;
+  for (let i = 0; i < n; i++) { const dx = xs[i] - mx, dy = ys[i] - my; sxy += dx * dy; sxx += dx * dx; syy += dy * dy; }
+  return sxy / Math.sqrt(sxx * syy);
+}
+function drawScatter() {
+  const pts = T.filter(t => t.tot > 0);
+  const k = KEY[xmode];
+  const [x0, x1] = niceExtent(pts.map(t => t[k]), 10);
+  const [y0, y1] = niceExtent(pts.map(t => t.yp), 10);
+  const X = v => M.l + (v - x0) / (x1 - x0) * (SW - M.l - M.r);
+  const Y = v => SH - M.b - (v - y0) / (y1 - y0) * (SH - M.t - M.b);
+  const maxTot = Math.max(...pts.map(t => t.tot));
+  const R = t => Math.max(2.6, 22 * Math.sqrt(t.tot / maxTot));
+  let h = '<g class="grid">';
+  for (let v = y0; v <= y1; v += 10) h += `<line x1="${M.l}" x2="${SW - M.r}" y1="${Y(v)}" y2="${Y(v)}"></line>`;
+  for (let v = x0; v <= x1; v += 10) h += `<line y1="${M.t}" y2="${SH - M.b}" x1="${X(v)}" x2="${X(v)}"></line>`;
+  h += '</g><g class="axis">';
+  for (let v = y0; v <= y1; v += 10) h += `<text x="${M.l - 8}" y="${Y(v) + 4}" text-anchor="end">${v}%</text>`;
+  for (let v = x0; v <= x1; v += 10) h += `<text x="${X(v)}" y="${SH - M.b + 18}" text-anchor="middle">${v}%</text>`;
+  h += `<text class="lbl" x="${(M.l + SW - M.r) / 2}" y="${SH - 8}" text-anchor="middle">${NAME[xmode]} share of registered voters (Feb. 2025)</text>`;
+  h += `<text class="lbl" transform="translate(14 ${(M.t + SH - M.b) / 2}) rotate(-90)" text-anchor="middle">Question 7 Yes share</text></g>`;
+  if (y0 < 50 && y1 > 50) h += `<line class="ref" x1="${M.l}" x2="${SW - M.r}" y1="${Y(50)}" y2="${Y(50)}"></line><text class="reflbl" x="${SW - M.r - 4}" y="${Y(50) - 6}" text-anchor="end">50% &mdash; Yes above, No below</text>`;
+  h += '<g id="dots"></g><g id="dlbls"></g>';
+  sc.innerHTML = h;
+  const gd = sc.querySelector('#dots'), gl = sc.querySelector('#dlbls');
+  dots = [];
+  pts.slice().sort((a, b) => b.tot - a.tot).forEach(t => {
+    const c = document.createElementNS(NS, 'circle');
+    c.setAttribute('class', 'dot'); c.setAttribute('cx', X(t[k])); c.setAttribute('cy', Y(t.yp)); c.setAttribute('r', R(t));
+    c.setAttribute('fill', q7Color(t.yp)); c.dataset.i = t.i;
+    gd.appendChild(c); dots[t.i] = c;
+  });
+  LABEL_TOWNS.forEach(n => {
+    const t = pts.find(z => z.n === n); if (!t) return;
+    const cx = X(t[k]), r = R(t), right = cx < SW * 0.8;
+    gl.insertAdjacentHTML('beforeend', `<text class="dlbl" x="${right ? cx + r + 4 : cx - r - 4}" y="${Y(t.yp) + 4}" text-anchor="${right ? 'start' : 'end'}">${n}</text>`);
+  });
+  const rv = corr(pts.map(t => t[k]), pts.map(t => t.yp));
+  document.getElementById('rstat').textContent = `Correlation across ${pts.length} towns (each town counts once): r = ${rv.toFixed(2)}`;
+  if (pinned && dots[pinned.i]) { dots[pinned.i].classList.add('hl'); gd.appendChild(dots[pinned.i]); }
+}
+sc.addEventListener('pointermove', ev => {
+  const c = ev.target.closest('circle.dot'); if (!c) { setHover(null); hideTip(); return; }
+  const t = T[+c.dataset.i]; setHover(t); showTip(t, ev);
+});
+sc.addEventListener('pointerleave', () => { setHover(null); hideTip(); });
+sc.addEventListener('click', ev => { const c = ev.target.closest('circle.dot'); if (c) pin(T[+c.dataset.i], true); });
+
+/* ---------- table ---------- */
+const tbody = document.querySelector('#tbl tbody');
+let sortK = 'n', sortDir = 1, filter = '';
+function renderTable() {
+  const rows = T.filter(t => !filter || t.n.toLowerCase().includes(filter) || t.c.toLowerCase().includes(filter))
+    .sort((a, b) => {
+      const va = a[sortK], vb = b[sortK];
+      if (va == null) return 1; if (vb == null) return -1;
+      return (typeof va === 'string' ? va.localeCompare(vb) : va - vb) * sortDir;
+    });
+  tbody.innerHTML = rows.map(t => {
+    const rc = t.res === 'na' ? 'na' : t.res;
+    const rt = t.res === 'na' ? 'NO RESULTS' : t.res.toUpperCase();
+    return `<tr data-i="${t.i}" class="${pinned === t ? 'sel' : ''}">
+      <td>${t.n}</td><td>${t.c}</td><td><span class="res ${rc}">${rt}</span></td>
+      <td class="n">${pct(t.yp)}<span class="mini"><b style="width:${t.yp ?? 0}%;background:${q7Color(t.yp)}"></b></span></td>
+      <td class="n">${fmt.format(t.y)}</td><td class="n">${fmt.format(t.no)}</td>
+      <td class="n">${t.dp.toFixed(1)}</td><td class="n">${t.rp.toFixed(1)}</td><td class="n">${t.up.toFixed(1)}</td>
+      <td class="n">${fmt.format(t.reg)}</td>
+      <td class="n${t.pr < t.pt ? ' warn' : ''}">${t.pr}/${t.pt}</td></tr>`;
+  }).join('');
+  document.getElementById('tbCount').textContent = filter ? `${rows.length} of 351 shown` : 'Click a column to sort, a row to pin the town';
+  document.querySelectorAll('#tbl thead button').forEach(b => {
+    const on = b.dataset.k === sortK;
+    b.closest('th').setAttribute('aria-sort', on ? (sortDir > 0 ? 'ascending' : 'descending') : 'none');
+    b.textContent = b.textContent.replace(/ [▲▼]$/, '') + (on ? (sortDir > 0 ? ' ▲' : ' ▼') : '');
+  });
+}
+document.querySelector('#tbl thead').addEventListener('click', ev => {
+  const b = ev.target.closest('button'); if (!b) return;
+  const k = b.dataset.k;
+  if (sortK === k) sortDir = -sortDir; else { sortK = k; sortDir = (k === 'n' || k === 'c' || k === 'res') ? 1 : -1; }
+  renderTable();
+});
+tbody.addEventListener('click', ev => { const r = ev.target.closest('tr'); if (r) pin(T[+r.dataset.i], false); });
+tbody.addEventListener('pointermove', ev => { const r = ev.target.closest('tr'); setHover(r ? T[+r.dataset.i] : null); });
+tbody.addEventListener('pointerleave', () => setHover(null));
+
+/* ---------- controls ---------- */
+document.getElementById('modes').addEventListener('click', ev => {
+  const b = ev.target.closest('button'); if (!b) return;
+  mode = b.dataset.mode;
+  document.querySelectorAll('#modes button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+  paintMap(); legend();
+});
+document.getElementById('xmodes').addEventListener('click', ev => {
+  const b = ev.target.closest('button'); if (!b) return;
+  xmode = b.dataset.x;
+  document.querySelectorAll('#xmodes button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+  drawScatter();
+});
+const find = document.getElementById('find');
+document.getElementById('townlist').innerHTML = T.map(t => `<option value="${t.n}"></option>`).join('');
+find.addEventListener('input', () => {
+  filter = find.value.trim().toLowerCase();
+  renderTable();
+  const hit = T.find(t => t.n.toLowerCase() === filter);
+  if (hit) pin(hit, true);
+});
+
+/* ---------- boot ---------- */
+paintMap(); legend(); drawScatter(); renderTable(); pin(pinned, false);
+</script>
